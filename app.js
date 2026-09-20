@@ -12,7 +12,11 @@ const TCUSTOM = "tavily_custom";
 // Koda gömülü varsayılan anahtarlar — yeni anahtar eklemek için diziye satır ekle.
 // Site her aramada rastgele birini kullanır (karışık), hata vereni atlayıp diğerini dener.
 const DEFAULT_TAVILY_KEYS = [
-  "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"
+  "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",
+  "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",
+  "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",
+  "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",
+  "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"
 ];
 const RECENT = "fiyatbul_recent";
 let lastResults = [];

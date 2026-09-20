@@ -196,7 +196,6 @@ const MARKETS = [
 ];
 // Tavily include_domains ile doğrudan bu sitelerde arama yapmak için düz liste
 const SHOP_DOMAINS = MARKETS.map(m => m.domain);
-const COMPARE_DOMAINS = MARKETS.filter(m => m.kind === "karsilastir").map(m => m.domain);
 // Zincir marketler — ayrı sorguyla özellikle bu sitelerde aranır
 const MARKET_DOMAINS = MARKETS.filter(m => m.kind === "market").map(m => m.domain);
 // Sadece Türk siteleri: .tr uzantılı + bilinen Türk e-ticaret/market domainleri.
@@ -308,6 +307,8 @@ const MF_API = "https://api.marketfiyati.org.tr/api/v2";
 const MF_LAT = 38.67, MF_LON = 26.76, MF_DIST = 50; // kantin konumu: Foça
 const MF_HEADERS = {"Content-Type":"application/json","Accept":"application/json"};
 const MF_MARKET_NAMES = {a101:"A101",bim:"BİM",sok:"ŞOK",migros:"Migros",carrefour:"CarrefourSA",hakmar:"Hakmar",tarimkredi:"Tarım Kredi"};
+// Detaylı Arama tiki açık mı? (güvenli okuma: test ortamında false döner)
+function mfTickOn(){ try{ const el = $("mfFirst"); return !!(el && el.checked); }catch{ return false; } }
 let MF_DEPOTS = null;
 async function mfDepots(){
   if(MF_DEPOTS) return MF_DEPOTS;
@@ -377,11 +378,12 @@ async function mfSearch(term, barcode){
       if(r.ok) push(await r.json(), true);
     }catch{}
   }
-  // Ürün adı araması
+  // Ürün adı araması (tik işaretliyse daha çok resmi sonuç çek)
   const kw = String(term||"").trim();
   if(kw){
+    const size = mfTickOn() ? 30 : 20;
     const r = await fetch(MF_API + "/search", {method:"POST", headers:MF_HEADERS,
-      body:JSON.stringify({keywords:kw, pages:0, size:20, depots, latitude:MF_LAT, longitude:MF_LON, distance:MF_DIST})});
+      body:JSON.stringify({keywords:kw, pages:0, size, depots, latitude:MF_LAT, longitude:MF_LON, distance:MF_DIST})});
     if(r.ok) push(await r.json());
   }
   return {results: out};
@@ -395,17 +397,17 @@ form.onsubmit = async (e) => {
   res.innerHTML=""; emptyMsg.style.display="none";
   loading.classList.remove("hidden"); toolbar.classList.add("hidden");
   try{
-    // Tavily + Market Fiyatı resmi verisi aynı anda; resmi sonuçlar en üstte.
-    // MF çökerse Tavily sonuçları yine gelir (allSettled).
+    // Tavily + Market Fiyatı resmi verisi aynı anda; Detaylı Arama tiki
+    // işaretliyse resmi sonuçlar en üstte, değilse eşit sırada karışık.
+    // MF çökerse Tavily sonuçları yine gelir.
     const [tav, mf] = await Promise.all([
       tavilySearch(term || barcode, barcode),
       mfSearch(term, barcode).catch(()=>({results:[]}))
     ]);
     pushRecent({ term, barcode, label: barcode ? `${term} • ${barcode}` : (term || barcode) });
     // Tik işaretliyse resmi sonuçlar en üstte, değilse herkesle eşit sırada karışık
-    const mfFirst = $("mfFirst") && $("mfFirst").checked;
     const mfRes = ((mf&&mf.results)||[]), tavRes = ((tav&&tav.results)||[]);
-    lastResults = mfFirst ? [...mfRes, ...tavRes] : [...tavRes, ...mfRes];
+    lastResults = mfTickOn() ? [...mfRes, ...tavRes] : [...tavRes, ...mfRes];
     render();
   }catch(err){
     emptyMsg.style.display="block";
@@ -415,9 +417,11 @@ form.onsubmit = async (e) => {
 
 function render(){
   const arr = [...lastResults];
-  // Sıra: bilinen market/e-ticaret/karşılaştırma siteleri önce (öncelik yok, hepsi eşit),
-  // her grupta fiyatı görünenler üstte (satın alınabilir sonuçlar önce)
-  arr.sort((a,b)=> (priorityOf(a.url)-priorityOf(b.url)) || ((b._price?1:0)-(a._price?1:0)));
+  // Sıra: Detaylı Arama tiki işaretliyse 🏛️ resmi sonuçlar her zaman en üstte;
+  // sonra bilinen siteler, her grupta fiyatlılar önce.
+  const first = mfTickOn();
+  arr.sort((a,b)=> ((first&&b._mf?1:0)-(first&&a._mf?1:0))
+    || (priorityOf(a.url)-priorityOf(b.url)) || ((b._price?1:0)-(a._price?1:0)));
   res.innerHTML="";
   arr.forEach((r)=>{
     const d=document.createElement("div"); d.className="card" + (r._mf ? " mf" : "");

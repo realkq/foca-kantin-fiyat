@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FiyatBul — Mobil Fiyat Araştırma</title>
+<link rel="stylesheet" href="style.css">
+<meta name="theme-color" content="#0f172a">
+<meta name="description" content="Ürün adı veya barkod yaz, Tavily ile Türkiye'deki güncel fiyatları karşılaştır.">
+</head>
+<body>
+<header class="topbar">
+  <div class="logo"><svg class="cart-logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-9.83-3.25l.03-.12.9-2h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4h-.01l-1.1 2-2.76 5H8.53l-.13-.27L6.16 6l-.95-2-.94-2H1v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.13 0-.25-.11-.25-.25z"/></svg><span>FOÇA DENİZ ÜS KOMUTANLIĞI KANTİN BAŞKANLIĞI</span></div>
+  <div class="topbar-actions">
+    <button id="themeBtn" class="icon-btn" aria-label="Tema değiştir">☀️</button>
+    <button id="settingsBtn" class="icon-btn" aria-label="API ayarı">⚙️</button>
+  </div>
+</header>
+
+<div id="settingsPanel" class="settings hidden">
+  <h2>Tavily API Anahtarları</h2>
+  <p>Her satıra bir anahtar yapıştır (<code>tvly-…</code>). Aramalarda <b>karışık (rastgele)</b> kullanılır, kotası biten anahtar otomatik atlanır.</p>
+  <textarea id="tavilyKeysInput" rows="4" placeholder="tvly-…&#10;tvly-…" autocomplete="off" spellcheck="false"></textarea>
+  <div class="row">
+    <button id="saveKeyBtn" class="btn primary">Kaydet</button>
+    <button id="resetKeyBtn" class="btn">Sıfırla</button>
+    <button id="closeSettingsBtn" class="btn">Kapat</button>
+  </div>
+  <p id="keyStatus" class="muted"></p>
+</div>
+
+<main class="container">
+  <img src="banner.jpg" alt="Foça Kantin Başkanlığı — sizin için, her zaman taze ve hesaplı" class="hero-banner">
+
+  <form id="searchForm" class="search-box">
+    <input id="queryInput" type="search" placeholder="Ürün adı: Coca Cola 1L, Pınar Süt 1L…" autocomplete="off">
+    <div class="barcode-row">
+      <input id="barcodeInput" type="text" inputmode="numeric" placeholder="Barkod (opsiyonel): 8690…" autocomplete="off">
+      <button type="button" id="scanBtn" class="btn" title="Kamerayla barkod tara">📷</button>
+    </div>
+    <button type="submit" class="btn primary big">Ara</button>
+  </form>
+
+  <div id="scannerBox" class="scanner hidden">
+    <video id="scannerVideo" playsinline muted></video>
+    <div class="row">
+      <button id="stopScanBtn" class="btn">Vazgeç</button>
+    </div>
+    <p id="scanStatus" class="muted">Kamera açılıyor… Barkodu kameraya tut.</p>
+  </div>
+
+  <div class="history-row">
+    <span class="muted small">Son aramalar</span>
+    <button id="clearHistoryBtn" type="button" class="link-btn danger">🗑 Geçmişi sil</button>
+  </div>
+  <div class="chips" id="recentChips"></div>
+
+  <div class="toolbar hidden" id="toolbar">
+    <span id="resultCount" class="muted"></span>
+  </div>
+
+  <div id="loading" class="hidden"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+  <div id="results" class="results"></div>
+  <p id="emptyMsg" class="muted">Henüz arama yapmadın. Yukarıya bir ürün yaz 👆</p>
+</main>
+
+<nav class="bottombar">
+  <span>⚡ Tavily destekli • mobil uyumlu • çoklu anahtar</span>
+</nav>
+
+<script src="app.js"></script>
+</body>
+</html>

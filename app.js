@@ -235,6 +235,16 @@ function priorityOf(url){
     return 2;
   }catch{ return 2; }
 }
+// Sabit site sıralaması (tik açık/kapalı fark etmez, hep bu sıra):
+// marketfiyati → marketkarşılaştır → migros → carrefoursa → şok → bim → a101 → diğerleri
+const SITE_ORDER = ["marketfiyati.org.tr","marketkarsilastir.com","migros.com.tr","carrefoursa.com","sokmarket.com.tr","bim.com.tr","a101.com.tr"];
+function siteRank(url){
+  try{
+    const h = new URL(url).hostname.toLowerCase().replace(/^www\./,"").replace(/^m\./,"").replace(/^mobile\./,"");
+    const i = SITE_ORDER.findIndex(d => h === d || h.endsWith("." + d));
+    return i === -1 ? SITE_ORDER.length : i;
+  }catch{ return SITE_ORDER.length; }
+}
 
 // Tek Tavily çağrısı — anahtarları karışık sırayla dener (401/429/432/433'te sonrakine geç)
 async function tavilyCall(body, keys){
@@ -417,11 +427,9 @@ form.onsubmit = async (e) => {
 
 function render(){
   const arr = [...lastResults];
-  // Sıra: Detaylı Arama tiki işaretliyse 🏛️ resmi sonuçlar her zaman en üstte;
-  // sonra bilinen siteler, her grupta fiyatlılar önce.
-  const first = mfTickOn();
-  arr.sort((a,b)=> ((first&&b._mf?1:0)-(first&&a._mf?1:0))
-    || (priorityOf(a.url)-priorityOf(b.url)) || ((b._price?1:0)-(a._price?1:0)));
+  // Sabit sıra (tik fark etmez): marketfiyatı → marketkarşılaştır → migros →
+  // carrefoursa → şok → bim → a101 → diğerleri; aynı sitede fiyatlılar önce.
+  arr.sort((a,b)=> (siteRank(a.url)-siteRank(b.url)) || ((b._price?1:0)-(a._price?1:0)));
   res.innerHTML="";
   arr.forEach((r)=>{
     const d=document.createElement("div"); d.className="card" + (r._mf ? " mf" : "");

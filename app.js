@@ -1,4 +1,4 @@
-// FiyatBul — Tavily Search ile mobil fiyat karşılaştırma
+// FiyatBul — Tavily Search + Market Fiyatı resmi verisi ile mobil fiyat karşılaştırma
 // Çoklu API anahtarı: karışık (rastgele) kullanım + kota/bitmiş anahta otomatik yedek
 const $ = (id) => document.getElementById(id);
 const form = $("searchForm"), q = $("queryInput"), bc = $("barcodeInput"), res = $("results"),
@@ -83,7 +83,7 @@ if($("clearHistoryBtn")) $("clearHistoryBtn").onclick = () => {
   localStorage.removeItem(RECENT);
   renderRecent();
 };
-// Market Fiyatı öncelik tiki değişince mevcut sonuçları yeniden sırala (yeni arama yapmaz)
+// Detaylı Arama tiki değişince mevcut sonuçları yeniden sırala (yeni arama yapmaz)
 if($("mfFirst")) $("mfFirst").onchange = () => { if(lastResults.length) render(); };
 
 // Tema: varsayılan dark, seçim hatırlanır (☀️/🌙)
@@ -165,7 +165,7 @@ function isRelevant(r, term, barcode){
 
 // Satın alınabilir (e-ticaret/market) + fiyat karşılaştırma siteleri.
 // Liste ne kadar genişse sonuçlar o kadar alışveriş odaklı olur.
-// Öncelikli site YOK — listedeki tüm siteler eşit, fiyatlı sonuçlar üstte.
+// Öncelikli site YOK — sıralama SITE_ORDER ile sabit, tüm siteler eşit kuralla dizilir.
 const MARKETS = [
   { domain: "marketkarsilastir.com", name: "MarketKarşılaştır", kind: "karsilastir" },
   { domain: "carrefoursa.com", name: "CarrefourSA", kind: "market" },
@@ -395,7 +395,7 @@ async function mfSearch(term, barcode){
       const list = p.productDepotInfoList || [];
       if(!list.length) continue;
       // Birebir eşleşme: kimlikle bulunan zaten kesin; anahtar kelime sonuçları
-      // ürün adındaki TÜM kelimeleri içermek zorunda (örn: 750 gr aramasında 15 gr elenir)
+      // ürün adındaki TÜM kelimeleri + gramajı içermek zorunda (örn: 750 gr aramasında 15 gr elenir)
       if(!exact && !mfExactMatch(p, term)) continue;
       const r = mfCard(p, list);
       if(r && isRelevant({title:r.title, content:r._sub||"", url:r.url}, term, barcode)){ seen.add(p.id); out.push(r); }
@@ -429,14 +429,15 @@ form.onsubmit = async (e) => {
   loading.classList.remove("hidden"); toolbar.classList.add("hidden");
   try{
     // Tavily + Market Fiyatı resmi verisi aynı anda; Detaylı Arama tiki
-    // işaretliyse resmi sonuçlar en üstte, değilse eşit sırada karışık.
+    // işaretliyse daha çok resmi sonuç çekilir, sıra her zaman sabit listeyle dizilir.
     // MF çökerse Tavily sonuçları yine gelir.
     const [tav, mf] = await Promise.all([
       tavilySearch(term || barcode, barcode),
       mfSearch(term, barcode).catch(()=>({results:[]}))
     ]);
     pushRecent({ term, barcode, label: barcode ? `${term} • ${barcode}` : (term || barcode) });
-    // Tik işaretliyse resmi sonuçlar en üstte, değilse herkesle eşit sırada karışık
+    // Tik işaretliyse resmi sonuçlar önde, değilse herkesle eşit sırada karışık
+    // (sabit site sırası render içinde uygulanır)
     const mfRes = ((mf&&mf.results)||[]), tavRes = ((tav&&tav.results)||[]);
     lastResults = mfTickOn() ? [...mfRes, ...tavRes] : [...tavRes, ...mfRes];
     render();
@@ -449,7 +450,7 @@ form.onsubmit = async (e) => {
 function render(){
   const arr = [...lastResults];
   // Sabit sıra (tik fark etmez): marketfiyatı → marketkarşılaştır → migros →
-  // carrefoursa → şok → bim → a101 → diğerleri; aynı sitede fiyatlılar önce.
+  // carrefoursa → şok → bim → a101 → cimri → akakçe → diğerleri; aynı sitede fiyatlılar önce.
   arr.sort((a,b)=> (siteRank(a.url)-siteRank(b.url)) || ((b._price?1:0)-(a._price?1:0)));
   res.innerHTML="";
   arr.forEach((r)=>{

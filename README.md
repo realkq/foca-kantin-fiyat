@@ -15,7 +15,8 @@ Türkiye'deki güncel fiyatları karşılaştır. Mobil uyumlu, tek sayfa.
 ## GitHub Pages yayını
 
 Deponun köküne şu dosyaları yükle: `index.html`, `app.js`, `style.css`,
-`banner.jpg` (bu dosya opsiyonel). Settings → Pages → Deploy from a branch → `main` / root.
+`banner.jpg`, `README.md` (banner görseli şart).
+Settings → Pages → Deploy from a branch → `main` / root.
 
 ## Nasıl çalışır?
 
@@ -25,13 +26,13 @@ Deponun köküne şu dosyaları yükle: `index.html`, `app.js`, `style.css`,
   Sonuçlar süzülür: yabancı site yok, `/marka/` liste sayfası yok,
   ürün adıyla eşleşmeyen yok.
   Sabit sıralama: marketfiyatı → marketkarşılaştır → migros → carrefoursa →
-  şok → bim → a101 → diğerleri (tik açık/kapalı fark etmez).
+  şok → bim → a101 → cimri → akakçe → diğerleri (tik açık/kapalı fark etmez).
 - **Market Fiyatı resmi API'si** (`https://api.marketfiyati.org.tr/api/v2`,
   anahtarsız): Foça konumu için yakın marketler (`nearest`) + ürün adı
   (`search`) veya barkod (`searchByIdentity`) ile gerçek fiyatlar.
-  Ürün adının TÜM kelimeleri eşleşmek zorunda (birebir).
-  🏛️ rozetli altın kartlar. Detaylı Arama tiki işaretliyse daha çok
-  resmi sonuç çekilir (30 yerine 20).
+  Ürün adının TÜM kelimeleri + gramaj/hacim eşleşmek zorunda (birebir;
+  "1l"="1 lt"="1000 ml"). 🏛️ rozetli altın kartlar.
+  Detaylı Arama tiki işaretliyse daha çok resmi sonuç çekilir (30 yerine 20).
 - Fiyat, başlık + açıklama metnindeki TL bilgisinden yakalanır.
 
 ## Çoklu anahtar (karışık kullanım)
@@ -49,7 +50,7 @@ Deponun köküne şu dosyaları yükle: `index.html`, `app.js`, `style.css`,
 - 📷 kamerayla barkod okuma (BarcodeDetector destekleyen tarayıcılarda)
 - Dark tema (varsayılan) + ☀️/🌙 geçişi, seçim hatırlanır
 - Son aramalar + 🗑 geçmişi sil
-- 2 sütun kompakt sonuç kartları
+- 2 sütun kompakt sonuç kartları, bannera dokununca sayfa yenilenir
 
 ## Dosyalar
 

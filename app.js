@@ -236,8 +236,8 @@ function priorityOf(url){
   }catch{ return 2; }
 }
 // Sabit site sıralaması (tik açık/kapalı fark etmez, hep bu sıra):
-// marketfiyati → marketkarşılaştır → migros → carrefoursa → şok → bim → a101 → diğerleri
-const SITE_ORDER = ["marketfiyati.org.tr","marketkarsilastir.com","migros.com.tr","carrefoursa.com","sokmarket.com.tr","bim.com.tr","a101.com.tr"];
+// marketfiyatı → marketkarşılaştır → migros → carrefoursa → şok → bim → a101 → cimri → akakçe → diğerleri
+const SITE_ORDER = ["marketfiyati.org.tr","marketkarsilastir.com","migros.com.tr","carrefoursa.com","sokmarket.com.tr","bim.com.tr","a101.com.tr","cimri.com","akakce.com"];
 function siteRank(url){
   try{
     const h = new URL(url).hostname.toLowerCase().replace(/^www\./,"").replace(/^m\./,"").replace(/^mobile\./,"");
@@ -336,16 +336,37 @@ function mfMarketName(k){
 function mfMoney(v){
   return Number(v).toLocaleString("tr-TR",{minimumFractionDigits:2, maximumFractionDigits:2}) + " ₺";
 }
-// Market Fiyatı birebir eşleşme: aranan kelimelerin TAMAMI ürün adı + gramaj + markada geçmeli.
+// Gramaj/hacim yakala ve aynı birime çevir: "1l"="1 lt"="1000 ml" → V1000, "750 gr" → G750
+function mfVolumes(text){
+  const out = [];
+  const re = /(\d+(?:[.,]\d+)?)\s*(ml|cl|lt|l|kg|gr|g)\b/gi;
+  let m;
+  while((m = re.exec(String(text||"").toLowerCase()))){
+    let v = parseFloat(m[1].replace(",","."));
+    if(!isFinite(v)) continue;
+    const u = m[2];
+    if(u === "kg" || u === "l" || u === "lt") v *= 1000;
+    else if(u === "cl") v *= 10;
+    out.push(((u === "kg" || u === "gr" || u === "g") ? "G" : "V") + Math.round(v));
+  }
+  return out;
+}
+// Market Fiyatı birebir eşleşme: aranan kelimelerin TAMAMI + gramaj/hacim
+// ürün adı + gramaj + markada geçmeli (örn: "süt 1l" aramasında 200 ml elenir).
 // Sadece barkodla aramada (ürün adı yoksa) eleme yapılmaz.
 function mfExactMatch(p, term){
   const t = String(term||"").trim();
   if(!t) return true;
   if(t.replace(/\D/g,"").length >= 6 && !t.replace(/[\d\s]/g,"")) return true;
+  const ptext = (p.title||"") + " " + (p.refinedVolumeOrWeight||"") + " " + (p.brand||"");
+  const qvol = mfVolumes(t);
+  if(qvol.length){
+    const pvol = mfVolumes(ptext);
+    if(!qvol.every(v => pvol.includes(v))) return false;
+  }
   const toks = queryTokens(t);
   if(!toks.length) return true;
-  const text = ((p.title||"") + " " + (p.refinedVolumeOrWeight||"") + " " + (p.brand||"")).toLowerCase();
-  return toks.every(x => text.includes(x));
+  return toks.every(x => ptext.toLowerCase().includes(x));
 }
 function mfSlug(s){
   const m = {ç:"c",ğ:"g",ı:"i",ö:"o",ş:"s",ü:"u"};

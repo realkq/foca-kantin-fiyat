@@ -170,7 +170,7 @@ const MARKETS = [
   { domain: "sokmarket.com.tr", name: "ŞOK", kind: "market" },
   { domain: "bim.com.tr", name: "BİM", kind: "market" },
   { domain: "a101.com.tr", name: "A101", kind: "market" },
-  { domain: "getir.com", name: "Getir", kind: "market" },
+  { domain: "getir.com", name: "Getir", kind: "maret" },
   { domain: "istegelsin.com", name: "İsteGelsin", kind: "market" },
   { domain: "macrocenter.com.tr", name: "Macrocenter", kind: "market" },
   { domain: "trendyol.com", name: "Trendyol", kind: "eticaret" },
